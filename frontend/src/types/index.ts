@@ -1,3 +1,18 @@
+export interface AIModelOption {
+  id: string;
+  name: string;
+  tag: string;
+  provider: string;
+}
+
+export const AVAILABLE_MODELS: AIModelOption[] = [
+  { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite", tag: "Fast & High Quota", provider: "Google" },
+  { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", tag: "Deep Reasoning", provider: "Google" },
+  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B", tag: "Free Tier", provider: "OpenRouter" },
+  { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1", tag: "Reasoning Free", provider: "OpenRouter" },
+  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", tag: "Exp Free", provider: "OpenRouter" }
+];
+
 export interface MetricWidget {
   title: string;
   value: string;

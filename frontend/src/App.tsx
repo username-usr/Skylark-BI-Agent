@@ -9,13 +9,20 @@ import {
   setActiveSessionId, 
   createNewSession 
 } from './services/chatHistory';
-import type { ChatSession, ChatMessage } from './types';
+import { AVAILABLE_MODELS, type ChatSession, type ChatMessage } from './types';
 
 export const App: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionIdState] = useState<string>('session-default');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [externalQuery, setExternalQuery] = useState<string | undefined>();
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
+    return localStorage.getItem('monday_bi_selected_model') || AVAILABLE_MODELS[0].id;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('monday_bi_selected_model', selectedModel);
+  }, [selectedModel]);
 
   useEffect(() => {
     const loaded = loadSessions();
@@ -79,10 +86,12 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen bg-white font-sans antialiased text-gray-900 flex flex-col overflow-hidden">
-      {/* Standalone Top Header */}
+      {/* Standalone Top Header with Universal Model Switcher */}
       <Header 
         onNewThread={handleNewThread} 
         onToggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
+        selectedModel={selectedModel}
+        onSelectModel={setSelectedModel}
       />
 
       {/* Main Content Area: Floating Left Sidebar + Seamless Chat Canvas */}
@@ -114,13 +123,15 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Seamless Chat Page (No Card Border / No Box Container) */}
+        {/* Seamless Chat Page */}
         <main className="flex-1 flex flex-col overflow-hidden h-full min-w-0 bg-white">
           <ChatInterface
             session={activeSession}
             onUpdateSessionMessages={handleUpdateSessionMessages}
             externalQuery={externalQuery}
             onClearExternalQuery={() => setExternalQuery(undefined)}
+            selectedModel={selectedModel}
+            onSelectModel={setSelectedModel}
           />
         </main>
       </div>

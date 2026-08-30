@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { ChatSession, ChatMessage } from '../types';
+import { AVAILABLE_MODELS, type ChatSession, type ChatMessage } from '../types';
 import { sendChatMessage } from '../services/api';
 import { MetricCards } from './MetricCards';
 import { QualityBanner } from './QualityBanner';
@@ -23,15 +23,9 @@ interface ChatInterfaceProps {
   onUpdateSessionMessages: (sessionId: string, messages: ChatMessage[], newTitle?: string) => void;
   externalQuery?: string;
   onClearExternalQuery?: () => void;
+  selectedModel: string;
+  onSelectModel: (modelId: string) => void;
 }
-
-const AVAILABLE_MODELS = [
-  { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite", tag: "Fast & High Quota", provider: "Google" },
-  { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", tag: "Advanced Analysis", provider: "Google" },
-  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B", tag: "Free Tier", provider: "OpenRouter" },
-  { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1", tag: "Reasoning Free", provider: "OpenRouter" },
-  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash", tag: "Exp Free", provider: "OpenRouter" }
-];
 
 const EXAMPLE_CARDS = [
   {
@@ -60,15 +54,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   session,
   onUpdateSessionMessages,
   externalQuery,
-  onClearExternalQuery
+  onClearExternalQuery,
+  selectedModel,
+  onSelectModel
 }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
-  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [isHeroDropdownOpen, setIsHeroDropdownOpen] = useState(false);
+  const [isBottomDropdownOpen, setIsBottomDropdownOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const heroDropdownRef = useRef<HTMLDivElement>(null);
+  const bottomDropdownRef = useRef<HTMLDivElement>(null);
 
   const currentModelObj = AVAILABLE_MODELS.find(m => m.id === selectedModel) || AVAILABLE_MODELS[0];
 
@@ -96,11 +93,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [externalQuery]);
 
-  // Click outside to close model dropdown
+  // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsModelDropdownOpen(false);
+      if (heroDropdownRef.current && !heroDropdownRef.current.contains(event.target as Node)) {
+        setIsHeroDropdownOpen(false);
+      }
+      if (bottomDropdownRef.current && !bottomDropdownRef.current.contains(event.target as Node)) {
+        setIsBottomDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -214,12 +214,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               {/* Input Footer: Model Switcher Pill + Right-aligned Submit Arrow */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 relative">
                 
-                {/* Interactive Model Switcher Button & Dropdown */}
-                <div className="relative" ref={dropdownRef}>
+                {/* Hero Model Switcher */}
+                <div className="relative" ref={heroDropdownRef}>
                   <button
                     type="button"
-                    onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                    className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full border border-gray-200 bg-gray-50/80 hover:bg-gray-100 text-xs md:text-[13.5px] font-medium text-gray-700 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    onClick={() => setIsHeroDropdownOpen(!isHeroDropdownOpen)}
+                    className="flex items-center space-x-2 px-3.5 py-1.5 rounded-full border border-gray-200 bg-gray-50/90 hover:bg-gray-100 text-xs md:text-[13.5px] font-medium text-gray-700 transition-all cursor-pointer shadow-2xs active:scale-95"
                   >
                     <Cpu className="w-3.5 h-3.5 text-purple-600" />
                     <span className="font-semibold text-gray-900">{currentModelObj.name}</span>
@@ -227,8 +227,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
                   </button>
 
-                  {/* Dropdown Menu */}
-                  {isModelDropdownOpen && (
+                  {/* Hero Dropdown Menu */}
+                  {isHeroDropdownOpen && (
                     <div className="absolute left-0 bottom-full mb-2 w-72 bg-white rounded-2xl border border-gray-200 shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
                       <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1.5">
                         Select AI Model
@@ -240,8 +240,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                             <button
                               key={m.id}
                               onClick={() => {
-                                setSelectedModel(m.id);
-                                setIsModelDropdownOpen(false);
+                                onSelectModel(m.id);
+                                setIsHeroDropdownOpen(false);
                               }}
                               className={`w-full text-left px-3 py-2 rounded-xl text-xs md:text-[13px] flex items-center justify-between transition-all cursor-pointer ${
                                 isSelected
@@ -396,7 +396,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
                   <div className="bg-gray-50 border border-gray-200 rounded-3xl px-6 py-4 text-xs md:text-sm font-mono text-gray-600 flex items-center gap-3">
                     <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                    <span>Querying Monday.com boards & calculating metrics...</span>
+                    <span>Querying Monday.com boards & calculating metrics with {currentModelObj.name}...</span>
                   </div>
                 </div>
               )}
@@ -405,22 +405,58 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </div>
 
-          {/* Sticky Bottom Prompt Bar with Model Switcher Button */}
+          {/* Sticky Bottom Prompt Bar with Live Interactive Model Switcher */}
           <div className="shrink-0 p-4 md:p-6 border-t border-gray-100 bg-white/95 backdrop-blur-md">
             <div className="max-w-2xl mx-auto">
-              <div className="flex items-center bg-gray-50 rounded-full border border-gray-200/90 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-4 py-2 mb-2.5">
+              <div className="flex items-center bg-gray-50 rounded-full border border-gray-200/90 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-4 py-2 mb-2.5 relative">
                 
-                {/* Inline Compact Model Switcher in bottom bar */}
-                <button
-                  type="button"
-                  onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                  className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-xs font-semibold text-gray-700 transition-all cursor-pointer mr-2 shadow-2xs"
-                  title="Switch Model"
-                >
-                  <Cpu className="w-3.5 h-3.5 text-purple-600" />
-                  <span className="hidden sm:inline">{currentModelObj.name.split(' ')[0]}</span>
-                  <ChevronDown className="w-3 h-3 text-gray-400" />
-                </button>
+                {/* Active Chat Bottom Model Switcher Button & Dropdown */}
+                <div className="relative shrink-0 mr-2" ref={bottomDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsBottomDropdownOpen(!isBottomDropdownOpen)}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-gray-100 border border-gray-200 text-xs font-semibold text-gray-800 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    title="Change Active AI Model"
+                  >
+                    <Cpu className="w-3.5 h-3.5 text-purple-600" />
+                    <span className="max-w-[110px] truncate">{currentModelObj.name}</span>
+                    <ChevronDown className="w-3 h-3 text-gray-400" />
+                  </button>
+
+                  {/* Bottom Popover Dropdown */}
+                  {isBottomDropdownOpen && (
+                    <div className="absolute left-0 bottom-full mb-2.5 w-72 bg-white rounded-2xl border border-gray-200 shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 py-1.5">
+                        Switch Model for Next Message
+                      </div>
+                      <div className="space-y-1">
+                        {AVAILABLE_MODELS.map((m) => {
+                          const isSelected = m.id === selectedModel;
+                          return (
+                            <button
+                              key={m.id}
+                              onClick={() => {
+                                onSelectModel(m.id);
+                                setIsBottomDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl text-xs md:text-[13px] flex items-center justify-between transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-purple-50 text-purple-900 font-bold border border-purple-100'
+                                  : 'text-gray-700 hover:bg-gray-100/80'
+                              }`}
+                            >
+                              <div>
+                                <div className="font-semibold text-gray-900">{m.name}</div>
+                                <div className="text-[11px] text-gray-400">{m.provider} • {m.tag}</div>
+                              </div>
+                              {isSelected && <Check className="w-4 h-4 text-purple-600 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <input
                   type="text"
@@ -442,7 +478,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
               {/* Overall Input / Output Token Counter */}
               <div className="flex items-center justify-between text-xs md:text-[13px] font-mono text-gray-400 px-2">
-                <span>Model: <strong className="text-gray-700 font-semibold">{currentModelObj.name}</strong></span>
+                <span>Active: <strong className="text-gray-700 font-semibold">{currentModelObj.name}</strong></span>
                 <div className="flex items-center space-x-2 text-gray-500">
                   <Zap className="w-3.5 h-3.5 text-purple-600" />
                   <span>In: <strong className="text-gray-800 font-semibold">{totalInputTokens}</strong></span>
