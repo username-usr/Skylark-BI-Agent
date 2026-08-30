@@ -29,11 +29,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   );
 
   return (
-    <aside className="w-72 md:w-80 h-full flex flex-col shrink-0 select-none">
-      {/* Detached Floating Sidebar Container */}
-      <div className="flex-1 bg-white rounded-3xl border border-gray-200/90 shadow-sm flex flex-col overflow-hidden p-4">
+    <aside className="w-72 md:w-80 flex flex-col shrink-0 select-none">
+      {/* Detached Floating Sidebar Container with reduced bottom height */}
+      <div className="bg-white rounded-3xl border border-gray-200/90 shadow-sm flex flex-col overflow-hidden p-4 max-h-[calc(100vh-180px)] h-fit mb-10">
         
-        {/* + New Chat Primary Action Button */}
+        {/* + New Chat Action Button */}
         <button
           onClick={onNewChat}
           className="w-full flex items-center justify-center space-x-2.5 px-4 py-2.5 rounded-2xl bg-gray-950 hover:bg-black text-white text-sm md:text-[15px] font-semibold transition-all shadow-xs cursor-pointer active:scale-98 mb-3.5"
@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         {/* Search Threads Input */}
-        <div className="relative mb-4">
+        <div className="relative mb-3.5">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -54,14 +54,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           />
         </div>
 
-        {/* Recent Threads List */}
-        <div className="text-xs md:text-[13px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
+        {/* Recent Threads Header */}
+        <div className="text-xs md:text-[12.5px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
           Recent Threads
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+        {/* Scrollable Threads List */}
+        <div className="overflow-y-auto space-y-1 pr-1 max-h-72">
           {filteredSessions.length === 0 ? (
-            <div className="text-center py-8 text-xs md:text-sm text-gray-400">
+            <div className="text-center py-6 text-xs md:text-sm text-gray-400">
               No threads found
             </div>
           ) : (
