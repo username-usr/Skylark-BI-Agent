@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   ArrowUp, 
-  Paperclip, 
   User, 
   Loader2,
   Copy,
@@ -167,7 +166,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               What's on <span className="text-purple-600 font-bold">your mind?</span>
             </h1>
 
-            {/* Hero Prompt Input Box with expanded border radius */}
+            {/* Hero Prompt Input Box */}
             <div className="w-full bg-white rounded-[36px] border border-gray-200 shadow-lg shadow-gray-200/40 p-5 md:p-6 mb-10 transition-all focus-within:border-gray-300 focus-within:shadow-xl">
               <div className="flex items-start space-x-3 mb-5">
                 <Sparkles className="w-5 h-5 text-purple-600 mt-1 shrink-0 stroke-[2.2]" />
@@ -186,17 +185,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 />
               </div>
 
-              {/* Input Footer */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => handleSend("Run a full cross-board risk analysis linking Deals pipeline with Work Orders receivables.")}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-full border border-gray-200 hover:bg-gray-50 text-xs md:text-sm font-medium text-gray-700 transition-colors cursor-pointer"
-                >
-                  <Paperclip className="w-4 h-4 text-gray-500" />
-                  <span>Attach</span>
-                </button>
-
+              {/* Input Footer: Right-aligned Submit Button */}
+              <div className="flex items-center justify-end pt-3 border-t border-gray-100">
                 <button
                   onClick={() => handleSend()}
                   disabled={loading || !input.trim()}
@@ -340,7 +330,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </div>
 
-          {/* Sticky Bottom Prompt Bar with smooth rounded-full / rounded-3xl curves */}
+          {/* Sticky Bottom Prompt Bar */}
           <div className="shrink-0 p-4 md:p-6 border-t border-gray-100 bg-white/95 backdrop-blur-md">
             <div className="max-w-2xl mx-auto">
               <div className="flex items-center bg-gray-50 rounded-full border border-gray-200/90 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-5 py-2.5 mb-2.5">
