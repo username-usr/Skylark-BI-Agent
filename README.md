@@ -1,11 +1,16 @@
 # Skylark Drones — Monday.com Business Intelligence Agent
 
-[![Live Hosted Demo](https://img.shields.io/badge/Live_Demo-monday--bi--agent.onrender.com-7c3aed?style=for-the-badge&logo=render)](https://monday-bi-agent-smhz.onrender.com/)
-[![GitHub Repo](https://img.shields.io/badge/GitHub_Repo-Skylark--BI--Agent-0ea5e9?style=for-the-badge&logo=github)](https://github.com/username-usr/Skylark-BI-Agent)
+[![Live Hosted Prototype](https://img.shields.io/badge/Live_Hosted_App-monday--bi--agent--smhz.onrender.com-7c3aed?style=for-the-badge&logo=render)](https://monday-bi-agent-smhz.onrender.com/)
+[![GitHub Repository](https://img.shields.io/badge/GitHub_Repo-Skylark--BI--Agent-0ea5e9?style=for-the-badge&logo=github)](https://github.com/username-usr/Skylark-BI-Agent)
+[![Automated Tests](https://img.shields.io/badge/Tests-11%20Passed-emerald?style=for-the-badge&logo=pytest)](https://github.com/username-usr/Skylark-BI-Agent)
 
 An AI Business Intelligence Decision Support Agent designed for founders and executives to query, analyze, and diagnose real-time business performance across **Monday.com Deals pipeline** and **Work Orders execution** boards.
 
-🔗 **Live Hosted Prototype**: **[https://monday-bi-agent-smhz.onrender.com/](https://monday-bi-agent-smhz.onrender.com/)**
+---
+
+> ### 🌐 Live Hosted Prototype (Deliverable #1)
+> **Direct Application URL**: **[https://monday-bi-agent-smhz.onrender.com/](https://monday-bi-agent-smhz.onrender.com/)**  
+> *Ready to test immediately without local setup or installation.*
 
 ---
 
@@ -60,8 +65,8 @@ An AI Business Intelligence Decision Support Agent designed for founders and exe
 
 ## 🚀 Quick Start & Setup Guide
 
-### 1. Hosted Prototype
-Access the fully functional hosted agent directly at **[https://monday-bi-agent-smhz.onrender.com/](https://monday-bi-agent-smhz.onrender.com/)**.
+### 1. Live Hosted Application (Zero Local Setup)
+Open **[https://monday-bi-agent-smhz.onrender.com/](https://monday-bi-agent-smhz.onrender.com/)** in any browser.
 
 ---
 
