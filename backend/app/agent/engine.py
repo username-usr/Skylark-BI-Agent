@@ -17,7 +17,7 @@ from app.agent.prompts import SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
-# Lightweight Gemini queue
+# Lightweight Gemini queue (Fastest inference)
 GEMINI_MODELS_QUEUE = [
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
@@ -30,9 +30,7 @@ GEMINI_MODELS_QUEUE = [
 OPENROUTER_MODELS = [
     "meta-llama/llama-3.3-70b-instruct",
     "deepseek/deepseek-r1",
-    "qwen/qwen-2.5-72b-instruct",
-    "google/gemma-4-26b-a4b-it:free",
-    "nvidia/nemotron-3.5-lightning:free"
+    "qwen/qwen-2.5-72b-instruct"
 ]
 
 class AgentEngine:
@@ -64,7 +62,7 @@ class AgentEngine:
         return any(re.search(p, q) for p in greeting_patterns)
 
     async def _call_openrouter(self, prompt: str, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
-        """Calls OpenRouter API with slug normalization and fallback."""
+        """Calls OpenRouter API with quick timeout and instant Gemini failover."""
         if not settings.OPENROUTER_API_KEY or not settings.OPENROUTER_API_KEY.strip():
             return None, "OpenRouter API Key not provided in .env."
 
@@ -75,58 +73,39 @@ class AgentEngine:
             "X-Title": "Monday BI Agent"
         }
 
-        # Normalize slug: remove :free if known to be standard
+        # Normalize slug
         raw_target = preferred_model or settings.OPENROUTER_MODEL or OPENROUTER_MODELS[0]
         cleaned_target = raw_target.replace(":free", "") if any(k in raw_target for k in ["llama-3.3-70b", "deepseek-r1", "qwen-2.5-72b"]) else raw_target
 
-        models_to_try = [cleaned_target] + [m for m in OPENROUTER_MODELS if m != cleaned_target]
-        last_err = None
-
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for model_name in models_to_try:
-                try:
-                    payload = {
-                        "model": model_name,
-                        "messages": [
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": prompt}
-                        ],
-                        "temperature": 0.3,
-                        "max_tokens": 4096
-                    }
-                    res = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-                    res_json = res.json()
-                    
-                    if res.status_code == 200 and "choices" in res_json and len(res_json["choices"]) > 0:
-                        content = res_json["choices"][0]["message"]["content"]
-                        if content and content.strip():
-                            return content.strip(), None
-                    
-                    # Check if error suggests another slug
-                    err_msg = res_json.get("error", {}).get("message", res.text)
-                    if "use this slug instead:" in err_msg:
-                        suggested_slug = err_msg.split("use this slug instead:")[-1].strip()
-                        if suggested_slug:
-                            payload["model"] = suggested_slug
-                            retry_res = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-                            retry_json = retry_res.json()
-                            if retry_res.status_code == 200 and "choices" in retry_json and len(retry_json["choices"]) > 0:
-                                content = retry_json["choices"][0]["message"]["content"]
-                                if content and content.strip():
-                                    return content.strip(), None
-                    
-                    last_err = f"OpenRouter ({model_name}): {err_msg}"
-                    logger.warning(last_err)
-                except Exception as e:
-                    last_err = str(e)
-                    logger.warning(f"OpenRouter call failed on {model_name}: {e}")
-
-        return None, last_err
+        try:
+            # 8-second strict timeout to prevent Render 502 Bad Gateway timeouts
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                payload = {
+                    "model": cleaned_target,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 4096
+                }
+                res = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+                res_json = res.json()
+                
+                if res.status_code == 200 and "choices" in res_json and len(res_json["choices"]) > 0:
+                    content = res_json["choices"][0]["message"]["content"]
+                    if content and content.strip():
+                        return content.strip(), None
+                
+                err_msg = res_json.get("error", {}).get("message", res.text)
+                return None, f"OpenRouter ({cleaned_target}): {err_msg}"
+        except Exception as e:
+            return None, f"OpenRouter request notice: {str(e)}"
 
     async def _call_gemini(self, prompt: str, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
         """Calls Google Gemini API across fallback models."""
         if not self.gemini_client:
-            return None, "Google GenAI API Key is not configured."
+            return None, "Google GenAI API Key is not configured in .env."
 
         from google.genai import types
         config = types.GenerateContentConfig(
@@ -156,7 +135,7 @@ class AgentEngine:
         return None, last_error
 
     async def _call_llm(self, user_query: str, deterministic_context: Optional[Dict[str, Any]] = None, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
-        """Dispatches query to selected model with automatic multi-provider failover."""
+        """Dispatches query with automatic failover."""
         context_str = ""
         if deterministic_context:
             context_str = f"\n\nLIVE DATA CONTEXT FROM MONDAY.COM:\n{json.dumps(deterministic_context, indent=2, default=str)}"
@@ -172,31 +151,30 @@ INSTRUCTIONS:
 - Format the response with a bold headline, structured bullet points for reasons/details, and clean paragraphs.
 - Cite exact counts, percentages, and figures from the provided context.
 """
-        # 1. If preferred model is an OpenRouter model
+        # 1. If user picked an OpenRouter model
         if preferred_model and ("/" in preferred_model or "llama" in preferred_model or "deepseek" in preferred_model or "qwen" in preferred_model):
             text, err = await self._call_openrouter(prompt, preferred_model=preferred_model)
             if text:
                 return text, None
-            # Automatic seamless failover to Gemini
+            # Fast failover to Gemini
             if settings.LLM_API_KEY:
                 text_gem, _ = await self._call_gemini(prompt)
                 if text_gem:
                     return text_gem, None
             return None, err
 
-        # 2. If preferred model is a Gemini model
+        # 2. If user picked a Gemini model
         if preferred_model and "gemini" in preferred_model:
             text, err = await self._call_gemini(prompt, preferred_model=preferred_model)
             if text:
                 return text, None
-            # Automatic seamless failover to OpenRouter
             if settings.OPENROUTER_API_KEY:
                 text_or, _ = await self._call_openrouter(prompt)
                 if text_or:
                     return text_or, None
             return None, err
 
-        # 3. Default multi-engine priority
+        # 3. Default priority: Gemini Flash-Lite (Fastest) -> OpenRouter
         if settings.LLM_API_KEY:
             text, err = await self._call_gemini(prompt)
             if text:
@@ -212,20 +190,19 @@ INSTRUCTIONS:
     def _format_natural_api_error(self, raw_error: str) -> str:
         if "429" in raw_error or "RESOURCE_EXHAUSTED" in raw_error:
             return (
-                "**LLM Rate Limit Notice (429 Quota Exceeded)**\n\n"
-                "The free-tier quota for Google Gemini API has been reached on this API key.\n\n"
-                "**How to resolve this:**\n"
-                "- Switch to an OpenRouter model via the Model Switcher in the header.\n"
-                "- Or wait ~30-60 seconds for the temporary per-minute rate window to reset."
+                "**Rate Limit Notice (429 Quota Exceeded)**\n\n"
+                "The temporary per-minute rate limit on the selected AI engine was reached.\n\n"
+                "**How to continue:**\n"
+                "- Please wait ~20-30 seconds for the quota window to reset, or switch to *Gemini 3.5 Flash-Lite* via the model switcher for instant responses."
             )
-        elif "503" in raw_error or "UNAVAILABLE" in raw_error:
+        elif "503" in raw_error or "UNAVAILABLE" in raw_error or "502" in raw_error or "timeout" in raw_error.lower():
             return (
-                "**API High Demand Notice (503 Service Unavailable)**\n\n"
-                "Upstream AI servers are currently experiencing high traffic spikes. Try switching models via the model dropdown."
+                "**Upstream Server High Demand (Temporary Delay)**\n\n"
+                "The selected AI model is experiencing upstream queue congestion. Please retry or switch to *Gemini 3.5 Flash-Lite* for sub-second generation."
             )
         else:
             return (
-                f"**LLM Notice**: Live AI text generation encountered an upstream notice (`{raw_error}`)."
+                f"**LLM Generation Notice**: {raw_error}"
             )
 
     async def process_query(self, query: str, preferred_model: Optional[str] = None) -> Dict[str, Any]:
@@ -306,7 +283,6 @@ INSTRUCTIONS:
         )
 
         if is_leadership_update:
-            # Aggregate all 4 core business domains for leadership update
             p_data = PipelineAnalytics.analyze_pipeline(deals_board)
             o_data = OperationsAnalytics.analyze_operations(wo_board)
             b_data = BillingAnalytics.analyze_billing_and_collections(wo_board)

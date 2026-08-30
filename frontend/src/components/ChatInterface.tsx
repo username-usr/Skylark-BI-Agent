@@ -103,7 +103,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [externalQuery]);
 
-  // Cycle thinking phrases every 2.5 seconds during loading
+  // Cycle thinking phrases every 2.4 seconds during loading
   useEffect(() => {
     if (!loading) {
       setThinkingIndex(0);
@@ -172,10 +172,29 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       };
       onUpdateSessionMessages(session.id, [...updatedMessages, agentMsg], newTitle);
     } catch (err: any) {
+      let naturalError = "The server is currently waking up or experiencing an upstream delay.";
+      const status = err.response?.status;
+      
+      if (status === 502 || status === 504) {
+        naturalError = (
+          "**Temporary Upstream Server Delay (502)**\n\n" +
+          "The selected AI engine took longer than expected or the hosting container is waking up from idle mode.\n\n" +
+          "**Recommended Resolution:**\n" +
+          "- Resend your question, or switch to **Gemini 3.5 Flash-Lite** via the model switcher for instant responses."
+        );
+      } else if (status === 429) {
+        naturalError = (
+          "**Rate Limit Reached (429)**\n\n" +
+          "The per-minute request limit for the selected model was reached. Please wait ~20-30 seconds before retrying."
+        );
+      } else if (err.message) {
+        naturalError = `**Notice**: ${err.message}`;
+      }
+
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'agent',
-        text: `**Error processing query**: ${err.message || 'Failed to connect to backend agent.'}`,
+        text: naturalError,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       onUpdateSessionMessages(session.id, [...updatedMessages, errorMsg], newTitle);
