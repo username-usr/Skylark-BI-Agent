@@ -106,7 +106,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     const updatedMessages = [...session.messages, userMsg];
     const isFirstUserMessage = session.messages.filter(m => m.sender === 'user').length === 0;
-    const newTitle = isFirstUserMessage ? (textToSend.length > 28 ? `${textToSend.slice(0, 28)}...` : textToSend) : undefined;
+    const newTitle = isFirstUserMessage ? (textToSend.length > 32 ? `${textToSend.slice(0, 32)}...` : textToSend) : undefined;
 
     onUpdateSessionMessages(session.id, updatedMessages, newTitle);
     if (!queryText) setInput('');
@@ -137,7 +137,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Calculate overall input & output tokens for current session
   const totalInputTokens = session.messages
     .filter(m => m.sender === 'user')
     .reduce((acc, m) => acc + estimateTokens(m.text), 0);
@@ -152,26 +151,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     <div className="flex flex-col h-full w-full bg-white text-gray-900 overflow-hidden font-sans relative">
       {isHomeView ? (
         /* ==================== HERO SCREEN ==================== */
-        <div className="flex-1 w-full overflow-y-auto px-4 py-8 md:py-12">
+        <div className="flex-1 w-full overflow-y-auto px-6 py-10 md:py-14">
           <div className="max-w-3xl mx-auto flex flex-col items-center justify-center min-h-full">
             {/* 3D Purple Gradient Sphere */}
-            <div className="relative mb-5">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-indigo-400 shadow-xl shadow-purple-500/25 flex items-center justify-center animate-pulse" />
-              <div className="absolute inset-0 rounded-full blur-lg bg-purple-500/30 -z-10" />
+            <div className="relative mb-6">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 via-fuchsia-500 to-indigo-400 shadow-xl shadow-purple-500/25 flex items-center justify-center animate-pulse" />
+              <div className="absolute inset-0 rounded-full blur-xl bg-purple-500/30 -z-10" />
             </div>
 
             {/* Hero Titles */}
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-gray-900 text-center mb-1">
+            <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-gray-900 text-center mb-1">
               {getTimeGreeting()}, Founder
             </h2>
-            <h1 className="text-2xl md:text-3xl font-medium tracking-tight text-gray-900 text-center mb-8">
-              What's on <span className="text-purple-600 font-semibold">your mind?</span>
+            <h1 className="text-3xl md:text-4xl font-medium tracking-tight text-gray-900 text-center mb-10">
+              What's on <span className="text-purple-600 font-bold">your mind?</span>
             </h1>
 
             {/* Prompt Input Box */}
-            <div className="w-full bg-white rounded-3xl border border-gray-200 shadow-lg shadow-gray-200/40 p-4 md:p-5 mb-8 transition-all focus-within:border-gray-300 focus-within:shadow-xl">
-              <div className="flex items-start space-x-2.5 mb-4">
-                <Sparkles className="w-4 h-4 text-purple-600 mt-1 shrink-0" />
+            <div className="w-full bg-white rounded-3xl border border-gray-200 shadow-lg shadow-gray-200/40 p-5 md:p-6 mb-10 transition-all focus-within:border-gray-300 focus-within:shadow-xl">
+              <div className="flex items-start space-x-3 mb-5">
+                <Sparkles className="w-5 h-5 text-purple-600 mt-1 shrink-0 stroke-[2.2]" />
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -183,25 +182,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   }}
                   rows={3}
                   placeholder="Ask Monday BI a business question or request an analysis..."
-                  className="w-full bg-transparent text-sm md:text-base text-gray-900 placeholder:text-gray-400 outline-none resize-none"
+                  className="w-full bg-transparent text-base md:text-[17px] leading-relaxed text-gray-900 placeholder:text-gray-400 outline-none resize-none"
                 />
               </div>
 
               {/* Input Footer */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => handleSend("Run a full cross-board risk analysis linking Deals pipeline with Work Orders receivables.")}
-                  className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-xs font-medium text-gray-700 transition-colors cursor-pointer"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-xs md:text-sm font-medium text-gray-700 transition-colors cursor-pointer"
                 >
-                  <Paperclip className="w-3.5 h-3.5 text-gray-500" />
+                  <Paperclip className="w-4 h-4 text-gray-500" />
                   <span>Attach</span>
                 </button>
 
                 <button
                   onClick={() => handleSend()}
                   disabled={loading || !input.trim()}
-                  className="w-8 h-8 rounded-full bg-gray-950 hover:bg-black disabled:opacity-30 text-white flex items-center justify-center transition-all shadow-md cursor-pointer active:scale-95"
+                  className="w-9 h-9 rounded-full bg-gray-950 hover:bg-black disabled:opacity-30 text-white flex items-center justify-center transition-all shadow-md cursor-pointer active:scale-95"
                 >
                   <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                 </button>
@@ -210,22 +209,22 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             {/* Example Prompt Cards */}
             <div className="w-full">
-              <div className="text-xs font-medium text-gray-500 mb-3 px-1">
+              <div className="text-xs md:text-[13px] font-semibold text-gray-500 mb-3.5 px-1 uppercase tracking-wider">
                 Get started with an example below
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {EXAMPLE_CARDS.map((card, idx) => (
                   <div
                     key={idx}
                     onClick={() => handleSend(card.query)}
-                    className="p-4 rounded-2xl bg-gray-50/70 hover:bg-gray-100/80 border border-gray-200/80 hover:border-gray-300 transition-all cursor-pointer flex flex-col justify-between h-24 group shadow-xs"
+                    className="p-4 md:p-5 rounded-2xl bg-gray-50/70 hover:bg-gray-100/80 border border-gray-200/80 hover:border-gray-300 transition-all cursor-pointer flex flex-col justify-between min-h-[105px] group shadow-2xs"
                   >
                     <div>
-                      <h4 className="text-xs font-semibold text-gray-900 group-hover:text-purple-700 transition-colors leading-snug">
+                      <h4 className="text-sm md:text-[15px] font-semibold text-gray-900 group-hover:text-purple-700 transition-colors leading-snug">
                         {card.title}
                       </h4>
-                      <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
+                      <p className="text-xs md:text-[13px] text-gray-500 mt-1.5 leading-relaxed">
                         {card.subtitle}
                       </p>
                     </div>
@@ -238,8 +237,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       ) : (
         /* ==================== ACTIVE CONVERSATION STREAM ==================== */
         <>
-          <div className="flex-1 w-full overflow-y-auto px-4 py-6 md:px-10 pb-20">
-            <div className="max-w-3xl mx-auto space-y-6">
+          <div className="flex-1 w-full overflow-y-auto px-4 py-6 md:px-10 pb-24">
+            <div className="max-w-3xl mx-auto space-y-7">
               {session.messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -249,25 +248,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 >
                   {/* Avatar */}
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs shadow-xs ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs shadow-2xs ${
                       msg.sender === 'user'
-                        ? 'bg-gray-200 text-gray-800 font-medium'
+                        ? 'bg-gray-200 text-gray-800 font-semibold'
                         : 'bg-purple-600 text-white'
                     }`}
                   >
-                    {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    {msg.sender === 'user' ? <User className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                   </div>
 
                   {/* Message Bubble */}
                   <div
-                    className={`w-full rounded-2xl px-5 py-4 text-sm leading-relaxed ${
+                    className={`w-full rounded-2xl px-6 py-5 text-base md:text-[16.5px] leading-relaxed ${
                       msg.sender === 'user'
-                        ? 'bg-gray-100/90 border border-gray-200/80 text-gray-900 max-w-xl ml-auto shadow-xs'
+                        ? 'bg-gray-100/90 border border-gray-200/80 text-gray-900 max-w-xl ml-auto shadow-2xs'
                         : 'bg-gray-50/80 border border-gray-200 text-gray-900 max-w-2xl'
                     }`}
                   >
-                    {/* Header Bar: Sender, Timestamp, and Copy button ONLY (No top token badge) */}
-                    <div className="flex items-center justify-between text-[11px] mb-2.5 font-mono text-gray-500 border-b border-gray-200/60 pb-1.5">
+                    {/* Header Bar */}
+                    <div className="flex items-center justify-between text-xs md:text-[13px] mb-3 font-mono text-gray-500 border-b border-gray-200/60 pb-2">
                       <div className="flex items-center space-x-2">
                         <span className="font-semibold text-gray-800">
                           {msg.sender === 'user' ? 'Founder' : 'Monday BI Agent'}
@@ -279,33 +278,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       {/* Copy Button */}
                       <button
                         onClick={() => handleCopy(msg.id, msg.text)}
-                        className="flex items-center space-x-1 hover:text-gray-900 transition-colors p-1 rounded hover:bg-gray-200/50 cursor-pointer"
+                        className="flex items-center space-x-1.5 hover:text-gray-900 transition-colors p-1 rounded hover:bg-gray-200/50 cursor-pointer"
                         title="Copy text"
                       >
                         {copiedId === msg.id ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span className="text-[10px] text-emerald-600 font-sans">Copied</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-xs text-emerald-600 font-sans font-medium">Copied</span>
                           </>
                         ) : (
-                          <Copy className="w-3 h-3" />
+                          <Copy className="w-3.5 h-3.5" />
                         )}
                       </button>
                     </div>
 
                     {/* Markdown Content */}
-                    <div className="prose max-w-none text-sm text-gray-900 leading-relaxed">
+                    <div className="prose max-w-none text-base md:text-[16.5px] text-gray-900 leading-relaxed">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          p: ({ children }) => <p className="mb-2.5 last:mb-0 leading-relaxed">{children}</p>,
+                          p: ({ children }) => <p className="mb-3.5 last:mb-0 leading-relaxed text-base md:text-[16.5px]">{children}</p>,
                           strong: ({ children }) => (
-                            <strong className="font-semibold text-gray-950 bg-gray-200/60 px-1 py-0.5 rounded text-[13px]">
+                            <strong className="font-semibold text-gray-950 bg-gray-200/60 px-1.5 py-0.5 rounded text-[15px]">
                               {children}
                             </strong>
                           ),
-                          ul: ({ children }) => <ul className="list-disc pl-5 space-y-1.5 my-2.5">{children}</ul>,
-                          li: ({ children }) => <li className="text-gray-800 leading-relaxed">{children}</li>,
+                          ul: ({ children }) => <ul className="list-disc pl-5 space-y-2 my-3">{children}</ul>,
+                          li: ({ children }) => <li className="text-gray-800 leading-relaxed text-base md:text-[16px]">{children}</li>,
                         }}
                       >
                         {msg.text}
@@ -327,10 +326,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
               {loading && (
                 <div className="flex items-start gap-3.5">
-                  <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0">
-                    <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                  <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 animate-pulse" />
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-xs font-mono text-gray-600 flex items-center gap-2.5">
+                  <div className="bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-xs md:text-sm font-mono text-gray-600 flex items-center gap-3">
                     <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
                     <span>Querying Monday.com boards & calculating metrics...</span>
                   </div>
@@ -342,37 +341,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
 
           {/* Sticky Bottom Prompt Bar */}
-          <div className="shrink-0 p-4 md:p-5 border-t border-gray-100 bg-white/95 backdrop-blur-md">
+          <div className="shrink-0 p-4 md:p-6 border-t border-gray-100 bg-white/95 backdrop-blur-md">
             <div className="max-w-2xl mx-auto">
-              <div className="flex items-center bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-3 py-2 mb-2">
+              <div className="flex items-center bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-4 py-2.5 mb-2.5">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask a follow-up business query..."
-                  className="flex-1 bg-transparent text-sm text-gray-900 px-2 py-1.5 outline-none placeholder:text-gray-400 font-sans"
+                  className="flex-1 bg-transparent text-base md:text-[16.5px] text-gray-900 px-2 py-1 outline-none placeholder:text-gray-400 font-sans"
                 />
 
                 <button
                   onClick={() => handleSend()}
                   disabled={loading || !input.trim()}
-                  className="w-8 h-8 rounded-full bg-gray-950 hover:bg-black disabled:opacity-30 text-white flex items-center justify-center transition-all shadow-sm cursor-pointer ml-2 active:scale-95"
+                  className="w-9 h-9 rounded-full bg-gray-950 hover:bg-black disabled:opacity-30 text-white flex items-center justify-center transition-all shadow-sm cursor-pointer ml-2 active:scale-95"
                 >
                   <ArrowUp className="w-4 h-4 stroke-[2.5]" />
                 </button>
               </div>
 
-              {/* Overall Input / Output Token Counter (Bottom Right Status Bar Only) */}
-              <div className="flex items-center justify-between text-[11px] font-mono text-gray-400 px-1">
+              {/* Overall Input / Output Token Counter */}
+              <div className="flex items-center justify-between text-xs md:text-[13px] font-mono text-gray-400 px-1">
                 <span>Monday.com Live Sync</span>
                 <div className="flex items-center space-x-2 text-gray-500">
-                  <Zap className="w-3 h-3 text-purple-600" />
+                  <Zap className="w-3.5 h-3.5 text-purple-600" />
                   <span>Input: <strong className="text-gray-800 font-semibold">{totalInputTokens}</strong> tokens</span>
                   <span>•</span>
                   <span>Output: <strong className="text-gray-800 font-semibold">{totalOutputTokens}</strong> tokens</span>
                   <span>•</span>
-                  <span className="bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 text-gray-800 font-semibold">
+                  <span className="bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-800 font-semibold">
                     Total: {totalSessionTokens}
                   </span>
                 </div>

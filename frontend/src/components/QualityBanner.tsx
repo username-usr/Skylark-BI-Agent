@@ -1,29 +1,27 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
-import type { WarningWidget } from '../types';
+import { AlertCircle } from 'lucide-react';
+import type { QualityWarning } from '../types';
 
 interface QualityBannerProps {
-  warnings: WarningWidget[];
+  warnings: QualityWarning[];
 }
 
 export const QualityBanner: React.FC<QualityBannerProps> = ({ warnings }) => {
   if (!warnings || warnings.length === 0) return null;
 
   return (
-    <div className="space-y-2 my-3">
+    <div className="space-y-2.5 my-4">
       {warnings.map((w, idx) => (
-        <div
+        <div 
           key={idx}
-          className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-950 text-[16px] font-normal leading-[1.4] tracking-[-0.02em] shadow-sm"
+          className="flex items-start space-x-3 p-3.5 md:p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs md:text-[14px] leading-relaxed shadow-2xs"
         >
-          <div className="p-1 rounded-md bg-amber-100 shrink-0 mt-0.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="flex-1 leading-[1.4]">
-            <span className="font-normal text-amber-700 mr-1.5 uppercase">
-              [{w.type}]
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold mr-1.5 uppercase text-[11px] md:text-xs tracking-wider bg-amber-100/80 text-amber-800 px-2 py-0.5 rounded-md border border-amber-200">
+              {w.type}
             </span>
-            <span className="text-amber-900">{w.message}</span>
+            <span className="font-medium text-amber-900">{w.message}</span>
           </div>
         </div>
       ))}

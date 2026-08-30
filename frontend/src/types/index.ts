@@ -5,16 +5,22 @@ export interface MetricWidget {
   type: 'primary' | 'success' | 'warning' | 'danger' | 'neutral';
 }
 
+export type MetricCard = MetricWidget;
+
 export interface WarningWidget {
   type: string;
   message: string;
 }
+
+export type QualityWarning = WarningWidget;
 
 export interface TableWidget {
   title: string;
   headers: string[];
   rows: (string | number)[][];
 }
+
+export type BreakdownTableData = TableWidget;
 
 export interface ChatMessage {
   id: string;

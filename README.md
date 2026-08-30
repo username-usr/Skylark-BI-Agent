@@ -152,3 +152,4 @@ uv run pytest tests -o pythonpath=.
 - **No Arithmetic Hallucinations**: All sums, weighted probabilities, and percentages are computed deterministically in Python before being synthesized by the LLM.
 - **Missing Value Handling**: Incomplete or missing values are never guessed. The agent explicitly identifies and communicates data gaps to leadership.
 - **Graceful Fallbacks**: If Monday API rate limits or network issues occur, the agent falls back across MCP → GraphQL → local caches without crashing.
+

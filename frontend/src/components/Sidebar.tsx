@@ -3,7 +3,7 @@ import {
   SquarePen, 
   Search, 
   MessageSquare, 
-  Trash2 
+  Trash2
 } from 'lucide-react';
 import type { ChatSession } from '../types';
 
@@ -22,76 +22,80 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNewChat,
   onDeleteSession
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredSessions = sessions.filter(s =>
-    s.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSessions = sessions.filter(s => 
+    s.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <aside className="w-56 bg-white rounded-2xl border border-gray-200/90 shadow-sm p-3 flex flex-col max-h-[calc(100vh-140px)] mb-7 shrink-0 select-none transition-all">
-      {/* Top Action: New Chat */}
-      <button
-        onClick={onNewChat}
-        className="w-full flex items-center justify-center space-x-2 py-2 px-3 bg-gray-950 hover:bg-black text-white text-xs font-medium rounded-xl shadow-xs transition-all cursor-pointer active:scale-98 mb-2.5"
-      >
-        <SquarePen className="w-3.5 h-3.5" />
-        <span>New Chat</span>
-      </button>
+    <aside className="w-72 md:w-80 h-full flex flex-col shrink-0 select-none">
+      {/* Detached Floating Sidebar Container */}
+      <div className="flex-1 bg-white rounded-3xl border border-gray-200/90 shadow-sm flex flex-col overflow-hidden p-4">
+        
+        {/* + New Chat Primary Action Button */}
+        <button
+          onClick={onNewChat}
+          className="w-full flex items-center justify-center space-x-2.5 px-4 py-2.5 rounded-2xl bg-gray-950 hover:bg-black text-white text-sm md:text-[15px] font-semibold transition-all shadow-xs cursor-pointer active:scale-98 mb-3.5"
+        >
+          <SquarePen className="w-4 h-4 stroke-[2.2]" />
+          <span>New Chat</span>
+        </button>
 
-      {/* Search Thread Input */}
-      <div className="relative mb-2.5">
-        <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search threads..."
-          className="w-full bg-gray-50/80 border border-gray-200 focus:border-gray-300 focus:bg-white text-xs text-gray-800 rounded-xl pl-8 pr-2.5 py-1.5 outline-none transition-all placeholder:text-gray-400 font-sans"
-        />
-      </div>
+        {/* Search Threads Input */}
+        <div className="relative mb-4">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search threads..."
+            className="w-full bg-gray-50/80 hover:bg-gray-100/70 focus:bg-white text-sm md:text-[14.5px] text-gray-900 placeholder:text-gray-400 pl-10 pr-3.5 py-2 rounded-xl border border-gray-200/80 focus:border-purple-300 outline-none transition-all"
+          />
+        </div>
 
-      {/* Conversations / Threads List */}
-      <div className="flex-1 overflow-y-auto space-y-1 pr-1">
-        <div className="text-[11px] font-medium text-gray-400 px-1 mb-1">
+        {/* Recent Threads List */}
+        <div className="text-xs md:text-[13px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
           Recent Threads
         </div>
 
-        {filteredSessions.length === 0 ? (
-          <div className="text-center py-4 text-xs text-gray-400">
-            No matching threads
-          </div>
-        ) : (
-          filteredSessions.map((sess) => {
-            const isActive = sess.id === activeSessionId;
-            return (
-              <div
-                key={sess.id}
-                onClick={() => onSelectSession(sess.id)}
-                className={`group flex items-center justify-between p-2 rounded-xl text-xs transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-gray-100 text-gray-950 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-              >
-                <div className="flex items-center space-x-2 truncate flex-1 mr-1">
-                  <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-purple-600' : 'text-gray-400'}`} />
-                  <span className="truncate">{sess.title}</span>
-                </div>
+        <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+          {filteredSessions.length === 0 ? (
+            <div className="text-center py-8 text-xs md:text-sm text-gray-400">
+              No threads found
+            </div>
+          ) : (
+            filteredSessions.map((session) => {
+              const isActive = session.id === activeSessionId;
+              return (
+                <div
+                  key={session.id}
+                  onClick={() => onSelectSession(session.id)}
+                  className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm md:text-[14.5px] transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-purple-50/80 text-purple-900 font-semibold border border-purple-100 shadow-2xs'
+                      : 'text-gray-700 hover:bg-gray-100/80 hover:text-gray-950'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5 truncate flex-1 mr-2">
+                    <MessageSquare className={`w-4 h-4 shrink-0 stroke-[2] ${isActive ? 'text-purple-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                    <span className="truncate leading-snug">{session.title}</span>
+                  </div>
 
-                {sessions.length > 1 && (
-                  <button
-                    onClick={(e) => onDeleteSession(sess.id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 rounded transition-opacity"
-                    title="Delete thread"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            );
-          })
-        )}
+                  {sessions.length > 1 && (
+                    <button
+                      onClick={(e) => onDeleteSession(session.id, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-600 text-gray-400 rounded transition-all cursor-pointer"
+                      title="Delete thread"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </aside>
   );

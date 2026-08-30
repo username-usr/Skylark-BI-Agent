@@ -1,48 +1,51 @@
 import React from 'react';
-import { Table } from 'lucide-react';
-import type { TableWidget } from '../types';
+import { Table as TableIcon } from 'lucide-react';
+import type { BreakdownTableData } from '../types';
 
 interface BreakdownTableProps {
-  table: TableWidget;
+  table: BreakdownTableData;
 }
 
 export const BreakdownTable: React.FC<BreakdownTableProps> = ({ table }) => {
-  if (!table || !table.headers || table.headers.length === 0) return null;
+  if (!table || !table.rows || table.rows.length === 0) return null;
 
   return (
-    <div className="my-4 border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-      {/* Table Header Bar */}
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Table className="w-4 h-4 text-gray-700" />
-          <h4 className="text-[16px] font-normal leading-[1.4] tracking-[-0.02em] uppercase text-gray-800">
+    <div className="my-5 rounded-2xl border border-gray-200/90 bg-white overflow-hidden shadow-2xs">
+      <div className="bg-gray-50/80 px-5 py-3 border-b border-gray-200/80 flex items-center justify-between">
+        <div className="flex items-center space-x-2.5">
+          <TableIcon className="w-4 h-4 text-gray-500" />
+          <span className="text-sm md:text-[15px] font-bold text-gray-800 tracking-tight">
             {table.title}
-          </h4>
+          </span>
         </div>
-        <span className="text-[16px] text-gray-500 font-normal leading-[1.4] tracking-[-0.02em] bg-white px-2.5 py-0.5 rounded-md border border-gray-200">
+        <span className="text-xs md:text-[13px] font-mono text-gray-400 font-medium">
           {table.rows.length} records
         </span>
       </div>
 
-      {/* Table Content */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-[16px] font-normal leading-[1.4] tracking-[-0.02em] text-gray-900">
-          <thead className="bg-gray-50/60 border-b border-gray-200 text-gray-600">
-            <tr>
-              {table.headers.map((h: string, idx: number) => (
-                <th key={idx} className="px-4 py-3 font-normal tracking-[-0.02em]">
-                  <span>{h}</span>
+      <div className="overflow-x-auto max-h-96 overflow-y-auto">
+        <table className="w-full text-left text-sm md:text-[14.5px] border-collapse">
+          <thead>
+            <tr className="bg-gray-50/50 text-gray-500 border-b border-gray-100 text-xs md:text-[13px] uppercase font-semibold tracking-wider">
+              {table.headers.map((h, i) => (
+                <th key={i} className="px-5 py-3">
+                  {h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {table.rows.map((row: (string | number)[], rIdx: number) => (
-              <tr key={rIdx} className="hover:bg-gray-50/80 transition-colors duration-150">
-                {row.map((cell: string | number, cIdx: number) => (
-                  <td
-                    key={cIdx}
-                    className="px-4 py-3 text-gray-800 font-normal leading-[1.4] tracking-[-0.02em]"
+            {table.rows.map((row, rIdx) => (
+              <tr 
+                key={rIdx} 
+                className="hover:bg-gray-50/60 transition-colors"
+              >
+                {row.map((cell, cIdx) => (
+                  <td 
+                    key={cIdx} 
+                    className={`px-5 py-3 font-medium ${
+                      cIdx === 0 ? 'text-gray-900 font-semibold' : 'text-gray-600'
+                    }`}
                   >
                     {cell}
                   </td>
