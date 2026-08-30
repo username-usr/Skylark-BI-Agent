@@ -167,8 +167,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               What's on <span className="text-purple-600 font-bold">your mind?</span>
             </h1>
 
-            {/* Prompt Input Box */}
-            <div className="w-full bg-white rounded-3xl border border-gray-200 shadow-lg shadow-gray-200/40 p-5 md:p-6 mb-10 transition-all focus-within:border-gray-300 focus-within:shadow-xl">
+            {/* Hero Prompt Input Box with expanded border radius */}
+            <div className="w-full bg-white rounded-[36px] border border-gray-200 shadow-lg shadow-gray-200/40 p-5 md:p-6 mb-10 transition-all focus-within:border-gray-300 focus-within:shadow-xl">
               <div className="flex items-start space-x-3 mb-5">
                 <Sparkles className="w-5 h-5 text-purple-600 mt-1 shrink-0 stroke-[2.2]" />
                 <textarea
@@ -191,7 +191,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <button
                   type="button"
                   onClick={() => handleSend("Run a full cross-board risk analysis linking Deals pipeline with Work Orders receivables.")}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-xs md:text-sm font-medium text-gray-700 transition-colors cursor-pointer"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-full border border-gray-200 hover:bg-gray-50 text-xs md:text-sm font-medium text-gray-700 transition-colors cursor-pointer"
                 >
                   <Paperclip className="w-4 h-4 text-gray-500" />
                   <span>Attach</span>
@@ -218,7 +218,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div
                     key={idx}
                     onClick={() => handleSend(card.query)}
-                    className="p-4 md:p-5 rounded-2xl bg-gray-50/70 hover:bg-gray-100/80 border border-gray-200/80 hover:border-gray-300 transition-all cursor-pointer flex flex-col justify-between min-h-[105px] group shadow-2xs"
+                    className="p-4 md:p-5 rounded-3xl bg-gray-50/70 hover:bg-gray-100/80 border border-gray-200/80 hover:border-gray-300 transition-all cursor-pointer flex flex-col justify-between min-h-[105px] group shadow-2xs"
                   >
                     <div>
                       <h4 className="text-sm md:text-[15px] font-semibold text-gray-900 group-hover:text-purple-700 transition-colors leading-snug">
@@ -259,7 +259,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                   {/* Message Bubble */}
                   <div
-                    className={`w-full rounded-2xl px-6 py-5 text-base md:text-[16.5px] leading-relaxed ${
+                    className={`w-full rounded-3xl px-6 py-5 text-base md:text-[16.5px] leading-relaxed ${
                       msg.sender === 'user'
                         ? 'bg-gray-100/90 border border-gray-200/80 text-gray-900 max-w-xl ml-auto shadow-2xs'
                         : 'bg-gray-50/80 border border-gray-200 text-gray-900 max-w-2xl'
@@ -278,7 +278,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       {/* Copy Button */}
                       <button
                         onClick={() => handleCopy(msg.id, msg.text)}
-                        className="flex items-center space-x-1.5 hover:text-gray-900 transition-colors p-1 rounded hover:bg-gray-200/50 cursor-pointer"
+                        className="flex items-center space-x-1.5 hover:text-gray-900 transition-colors p-1 rounded-lg hover:bg-gray-200/50 cursor-pointer"
                         title="Copy text"
                       >
                         {copiedId === msg.id ? (
@@ -329,7 +329,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0">
                     <Sparkles className="w-4 h-4 animate-pulse" />
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 text-xs md:text-sm font-mono text-gray-600 flex items-center gap-3">
+                  <div className="bg-gray-50 border border-gray-200 rounded-3xl px-6 py-4 text-xs md:text-sm font-mono text-gray-600 flex items-center gap-3">
                     <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
                     <span>Querying Monday.com boards & calculating metrics...</span>
                   </div>
@@ -340,10 +340,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </div>
 
-          {/* Sticky Bottom Prompt Bar */}
+          {/* Sticky Bottom Prompt Bar with smooth rounded-full / rounded-3xl curves */}
           <div className="shrink-0 p-4 md:p-6 border-t border-gray-100 bg-white/95 backdrop-blur-md">
             <div className="max-w-2xl mx-auto">
-              <div className="flex items-center bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-4 py-2.5 mb-2.5">
+              <div className="flex items-center bg-gray-50 rounded-full border border-gray-200/90 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-5 py-2.5 mb-2.5">
                 <input
                   type="text"
                   value={input}
@@ -363,7 +363,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
 
               {/* Overall Input / Output Token Counter */}
-              <div className="flex items-center justify-between text-xs md:text-[13px] font-mono text-gray-400 px-1">
+              <div className="flex items-center justify-between text-xs md:text-[13px] font-mono text-gray-400 px-2">
                 <span>Monday.com Live Sync</span>
                 <div className="flex items-center space-x-2 text-gray-500">
                   <Zap className="w-3.5 h-3.5 text-purple-600" />
@@ -371,7 +371,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <span>•</span>
                   <span>Output: <strong className="text-gray-800 font-semibold">{totalOutputTokens}</strong> tokens</span>
                   <span>•</span>
-                  <span className="bg-gray-100 px-2 py-0.5 rounded border border-gray-200 text-gray-800 font-semibold">
+                  <span className="bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200 text-gray-800 font-semibold">
                     Total: {totalSessionTokens}
                   </span>
                 </div>
