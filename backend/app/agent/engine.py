@@ -26,13 +26,13 @@ GEMINI_MODELS_QUEUE = [
     "gemini-3.5-flash"
 ]
 
-# OpenRouter free models queue
-OPENROUTER_FREE_MODELS = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-    "deepseek/deepseek-r1:free",
-    "qwen/qwen-2.5-72b-instruct:free",
-    "mistralai/mistral-7b-instruct:free"
+# OpenRouter active models queue
+OPENROUTER_MODELS = [
+    "meta-llama/llama-3.3-70b-instruct",
+    "deepseek/deepseek-r1",
+    "qwen/qwen-2.5-72b-instruct",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3.5-lightning:free"
 ]
 
 class AgentEngine:
@@ -64,9 +64,9 @@ class AgentEngine:
         return any(re.search(p, q) for p in greeting_patterns)
 
     async def _call_openrouter(self, prompt: str, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
-        """Calls OpenRouter API for free models."""
-        if not settings.OPENROUTER_API_KEY:
-            return None, "OpenRouter API Key not provided."
+        """Calls OpenRouter API with slug normalization and fallback."""
+        if not settings.OPENROUTER_API_KEY or not settings.OPENROUTER_API_KEY.strip():
+            return None, "OpenRouter API Key not provided in .env."
 
         headers = {
             "Authorization": f"Bearer {settings.OPENROUTER_API_KEY.strip()}",
@@ -75,8 +75,11 @@ class AgentEngine:
             "X-Title": "Monday BI Agent"
         }
 
-        chosen = preferred_model or settings.OPENROUTER_MODEL
-        models_to_try = [chosen] + [m for m in OPENROUTER_FREE_MODELS if m != chosen]
+        # Normalize slug: remove :free if known to be standard
+        raw_target = preferred_model or settings.OPENROUTER_MODEL or OPENROUTER_MODELS[0]
+        cleaned_target = raw_target.replace(":free", "") if any(k in raw_target for k in ["llama-3.3-70b", "deepseek-r1", "qwen-2.5-72b"]) else raw_target
+
+        models_to_try = [cleaned_target] + [m for m in OPENROUTER_MODELS if m != cleaned_target]
         last_err = None
 
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -99,7 +102,19 @@ class AgentEngine:
                         if content and content.strip():
                             return content.strip(), None
                     
+                    # Check if error suggests another slug
                     err_msg = res_json.get("error", {}).get("message", res.text)
+                    if "use this slug instead:" in err_msg:
+                        suggested_slug = err_msg.split("use this slug instead:")[-1].strip()
+                        if suggested_slug:
+                            payload["model"] = suggested_slug
+                            retry_res = await client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+                            retry_json = retry_res.json()
+                            if retry_res.status_code == 200 and "choices" in retry_json and len(retry_json["choices"]) > 0:
+                                content = retry_json["choices"][0]["message"]["content"]
+                                if content and content.strip():
+                                    return content.strip(), None
+                    
                     last_err = f"OpenRouter ({model_name}): {err_msg}"
                     logger.warning(last_err)
                 except Exception as e:
@@ -141,7 +156,7 @@ class AgentEngine:
         return None, last_error
 
     async def _call_llm(self, user_query: str, deterministic_context: Optional[Dict[str, Any]] = None, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
-        """Dispatches query to selected model (OpenRouter or Gemini) with failover."""
+        """Dispatches query to selected model with automatic multi-provider failover."""
         context_str = ""
         if deterministic_context:
             context_str = f"\n\nLIVE DATA CONTEXT FROM MONDAY.COM:\n{json.dumps(deterministic_context, indent=2, default=str)}"
@@ -157,43 +172,42 @@ INSTRUCTIONS:
 - Format the response with a bold headline, structured bullet points for reasons/details, and clean paragraphs.
 - Cite exact counts, percentages, and figures from the provided context.
 """
-        # If preferred model is an OpenRouter model
-        if preferred_model and ("/" in preferred_model or "llama" in preferred_model or "deepseek" in preferred_model):
+        # 1. If preferred model is an OpenRouter model
+        if preferred_model and ("/" in preferred_model or "llama" in preferred_model or "deepseek" in preferred_model or "qwen" in preferred_model):
             text, err = await self._call_openrouter(prompt, preferred_model=preferred_model)
             if text:
                 return text, None
-            # Fallback to Gemini
+            # Automatic seamless failover to Gemini
             if settings.LLM_API_KEY:
-                text_gem, err_gem = await self._call_gemini(prompt)
+                text_gem, _ = await self._call_gemini(prompt)
                 if text_gem:
                     return text_gem, None
             return None, err
 
-        # If preferred model is a Gemini model
+        # 2. If preferred model is a Gemini model
         if preferred_model and "gemini" in preferred_model:
             text, err = await self._call_gemini(prompt, preferred_model=preferred_model)
             if text:
                 return text, None
-            # Fallback to OpenRouter
+            # Automatic seamless failover to OpenRouter
             if settings.OPENROUTER_API_KEY:
-                text_or, err_or = await self._call_openrouter(prompt)
+                text_or, _ = await self._call_openrouter(prompt)
                 if text_or:
                     return text_or, None
             return None, err
 
-        # Default multi-engine priority
+        # 3. Default multi-engine priority
+        if settings.LLM_API_KEY:
+            text, err = await self._call_gemini(prompt)
+            if text:
+                return text, None
+
         if settings.OPENROUTER_API_KEY:
             text, err = await self._call_openrouter(prompt)
             if text:
                 return text, None
 
-        if settings.LLM_API_KEY:
-            text, err = await self._call_gemini(prompt)
-            if text:
-                return text, None
-            return None, err
-
-        return None, "No LLM API Key configured (add OPENROUTER_API_KEY or LLM_API_KEY in .env)."
+        return None, "No LLM API Key configured in .env."
 
     def _format_natural_api_error(self, raw_error: str) -> str:
         if "429" in raw_error or "RESOURCE_EXHAUSTED" in raw_error:
@@ -201,8 +215,8 @@ INSTRUCTIONS:
                 "**LLM Rate Limit Notice (429 Quota Exceeded)**\n\n"
                 "The free-tier quota for Google Gemini API has been reached on this API key.\n\n"
                 "**How to resolve this:**\n"
-                "- Switch to an OpenRouter free model (e.g. *Llama 3.3 70B* or *Gemini 2.0 Flash*) via the Model Switcher.\n"
-                "- Or wait ~30-60 seconds for the quota window to reset."
+                "- Switch to an OpenRouter model via the Model Switcher in the header.\n"
+                "- Or wait ~30-60 seconds for the temporary per-minute rate window to reset."
             )
         elif "503" in raw_error or "UNAVAILABLE" in raw_error:
             return (
