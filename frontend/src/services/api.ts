@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { HealthStatus } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Use relative /api endpoint in production or VITE_API_URL if specified
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 export const sendChatMessage = async (message: string, model?: string): Promise<{
   answer: string;
