@@ -86,12 +86,10 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-screen w-screen bg-white font-sans antialiased text-gray-900 flex flex-col overflow-hidden">
-      {/* Standalone Top Header with Universal Model Switcher */}
+      {/* Standalone Top Header */}
       <Header 
         onNewThread={handleNewThread} 
         onToggleMobileSidebar={() => setIsMobileSidebarOpen(true)}
-        selectedModel={selectedModel}
-        onSelectModel={setSelectedModel}
       />
 
       {/* Main Content Area: Floating Left Sidebar + Seamless Chat Canvas */}
