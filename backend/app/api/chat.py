@@ -8,6 +8,7 @@ agent_engine = AgentEngine()
 
 class ChatRequest(BaseModel):
     message: str
+    model: Optional[str] = None
 
 class MetricWidget(BaseModel):
     title: str
@@ -36,8 +37,7 @@ async def chat_endpoint(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
         
     try:
-        res = await agent_engine.process_query(request.message)
+        res = await agent_engine.process_query(request.message, preferred_model=request.model)
         return ChatResponse(**res)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent Error: {str(e)}")
-

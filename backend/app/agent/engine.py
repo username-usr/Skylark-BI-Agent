@@ -63,7 +63,7 @@ class AgentEngine:
         ]
         return any(re.search(p, q) for p in greeting_patterns)
 
-    async def _call_openrouter(self, prompt: str) -> Tuple[Optional[str], Optional[str]]:
+    async def _call_openrouter(self, prompt: str, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
         """Calls OpenRouter API for free models."""
         if not settings.OPENROUTER_API_KEY:
             return None, "OpenRouter API Key not provided."
@@ -75,7 +75,8 @@ class AgentEngine:
             "X-Title": "Monday BI Agent"
         }
 
-        models_to_try = [settings.OPENROUTER_MODEL] + [m for m in OPENROUTER_FREE_MODELS if m != settings.OPENROUTER_MODEL]
+        chosen = preferred_model or settings.OPENROUTER_MODEL
+        models_to_try = [chosen] + [m for m in OPENROUTER_FREE_MODELS if m != chosen]
         last_err = None
 
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -107,8 +108,8 @@ class AgentEngine:
 
         return None, last_err
 
-    async def _call_gemini(self, prompt: str) -> Tuple[Optional[str], Optional[str]]:
-        """Calls Google Gemini API across flash-lite fallback models."""
+    async def _call_gemini(self, prompt: str, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
+        """Calls Google Gemini API across fallback models."""
         if not self.gemini_client:
             return None, "Google GenAI API Key is not configured."
 
@@ -119,8 +120,11 @@ class AgentEngine:
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
         )
 
+        chosen = preferred_model or settings.LLM_MODEL or "gemini-3.5-flash-lite"
+        models_to_try = [chosen] + [m for m in GEMINI_MODELS_QUEUE if m != chosen]
+
         last_error = None
-        for model_name in GEMINI_MODELS_QUEUE:
+        for model_name in models_to_try:
             try:
                 response = self.gemini_client.models.generate_content(
                     model=model_name,
@@ -136,8 +140,8 @@ class AgentEngine:
 
         return None, last_error
 
-    async def _call_llm(self, user_query: str, deterministic_context: Optional[Dict[str, Any]] = None) -> Tuple[Optional[str], Optional[str]]:
-        """Dispatches query to OpenRouter or Gemini with dual-engine failover."""
+    async def _call_llm(self, user_query: str, deterministic_context: Optional[Dict[str, Any]] = None, preferred_model: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
+        """Dispatches query to selected model (OpenRouter or Gemini) with failover."""
         context_str = ""
         if deterministic_context:
             context_str = f"\n\nLIVE DATA CONTEXT FROM MONDAY.COM:\n{json.dumps(deterministic_context, indent=2, default=str)}"
@@ -153,14 +157,36 @@ INSTRUCTIONS:
 - Format the response with a bold headline, structured bullet points for reasons/details, and clean paragraphs.
 - Cite exact counts, percentages, and figures from the provided context.
 """
-        # 1. Try OpenRouter if API key is supplied
+        # If preferred model is an OpenRouter model
+        if preferred_model and ("/" in preferred_model or "llama" in preferred_model or "deepseek" in preferred_model):
+            text, err = await self._call_openrouter(prompt, preferred_model=preferred_model)
+            if text:
+                return text, None
+            # Fallback to Gemini
+            if settings.LLM_API_KEY:
+                text_gem, err_gem = await self._call_gemini(prompt)
+                if text_gem:
+                    return text_gem, None
+            return None, err
+
+        # If preferred model is a Gemini model
+        if preferred_model and "gemini" in preferred_model:
+            text, err = await self._call_gemini(prompt, preferred_model=preferred_model)
+            if text:
+                return text, None
+            # Fallback to OpenRouter
+            if settings.OPENROUTER_API_KEY:
+                text_or, err_or = await self._call_openrouter(prompt)
+                if text_or:
+                    return text_or, None
+            return None, err
+
+        # Default multi-engine priority
         if settings.OPENROUTER_API_KEY:
             text, err = await self._call_openrouter(prompt)
             if text:
                 return text, None
-            logger.info(f"OpenRouter failover to Gemini: {err}")
 
-        # 2. Try Gemini Flash-Lite models
         if settings.LLM_API_KEY:
             text, err = await self._call_gemini(prompt)
             if text:
@@ -175,25 +201,25 @@ INSTRUCTIONS:
                 "**LLM Rate Limit Notice (429 Quota Exceeded)**\n\n"
                 "The free-tier quota for Google Gemini API has been reached on this API key.\n\n"
                 "**How to resolve this:**\n"
-                "- Wait ~30-60 seconds for the temporary per-minute rate window to reset.\n"
-                "- Or set an `OPENROUTER_API_KEY` in `.env` to use unlimited free OpenRouter models."
+                "- Switch to an OpenRouter free model (e.g. *Llama 3.3 70B* or *Gemini 2.0 Flash*) via the Model Switcher.\n"
+                "- Or wait ~30-60 seconds for the quota window to reset."
             )
         elif "503" in raw_error or "UNAVAILABLE" in raw_error:
             return (
                 "**API High Demand Notice (503 Service Unavailable)**\n\n"
-                "Upstream AI servers are currently experiencing high traffic spikes."
+                "Upstream AI servers are currently experiencing high traffic spikes. Try switching models via the model dropdown."
             )
         else:
             return (
                 f"**LLM Notice**: Live AI text generation encountered an upstream notice (`{raw_error}`)."
             )
 
-    async def process_query(self, query: str) -> Dict[str, Any]:
+    async def process_query(self, query: str, preferred_model: Optional[str] = None) -> Dict[str, Any]:
         query_lower = query.lower()
 
         # 1. Handle Greetings & Identity Questions
         if self._is_greeting_or_identity(query):
-            llm_reply, err = await self._call_llm(query, None)
+            llm_reply, err = await self._call_llm(query, None, preferred_model=preferred_model)
             if llm_reply:
                 return {
                     "answer": llm_reply,
@@ -310,7 +336,7 @@ INSTRUCTIONS:
                 "In contrast, mature stages like `F. Negotiations` (92.3% complete) and `E. Proposal Sent` (85.7% complete) have high data coverage."
             )
 
-            llm_answer, err = await self._call_llm(query, deterministic_context)
+            llm_answer, err = await self._call_llm(query, deterministic_context, preferred_model=preferred_model)
             answer = llm_answer if llm_answer else (default_explanation if not err else f"{default_explanation}\n\n*{self._format_natural_api_error(err)}*")
 
             return {
@@ -434,7 +460,7 @@ INSTRUCTIONS:
             ]
 
         # Dynamic live LLM synthesis
-        llm_answer, err = await self._call_llm(query, deterministic_context)
+        llm_answer, err = await self._call_llm(query, deterministic_context, preferred_model=preferred_model)
         if llm_answer:
             answer = llm_answer
         else:

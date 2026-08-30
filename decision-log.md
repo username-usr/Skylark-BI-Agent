@@ -1,14 +1,13 @@
 # Skylark Drones — Monday.com Business Intelligence Agent
+
 ## Executive Decision Log & Technical Architecture
 
----
 
 ### 1. Executive Summary & Problem Overview
+
 Founders and executive leaders at Skylark Drones require immediate, high-confidence visibility into revenue pipelines, project delivery bottlenecks, cash collections, and cross-board risks without manually combing through unstructured Monday.com boards or waiting for ad-hoc spreadsheet cleanup.
 
 This project delivers an end-to-end AI Business Intelligence Decision Support Agent designed specifically for leadership queries. Built with a **3-Layer Monday.com Architecture** (Hosted MCP Server → GraphQL v2 API → Local Dataset Fallback) and a **Hybrid Deterministic Analytics + Conversational LLM Engine**, the agent provides mathematically verified metrics accompanied by actionable executive insights.
-
----
 
 ### 2. Key Assumptions Made
 
@@ -21,7 +20,6 @@ This project delivers an end-to-end AI Business Intelligence Decision Support Ag
 4. **Currency Normalization**:
    - All financial numbers are parsed from messy string variants (`₹`, `INR`, commas, trailing decimals, `Cr`, `Lakhs`) into uniform floats and formatted in standard Indian numbering system (`₹ Cr` / `₹ Lakhs`).
 
----
 
 ### 3. Key Architectural Trade-offs & Rationale
 
@@ -32,7 +30,6 @@ This project delivers an end-to-end AI Business Intelligence Decision Support Ag
 | **LLM Tier Strategy** | **Multi-Provider Failover (OpenRouter Free Models + Gemini Flash-Lite)** | Single Gemini Preview Model | Single preview models frequently trigger `429 Quota Exceeded` or `503 High Demand` on free tiers. The dual-engine queue ensures seamless failover and continuous uptime. |
 | **Frontend Aesthetic** | **Minimalist Executive White/Grey Workspace** | Generic Dark Chatbot UI | Designed specifically for founders and executive leaders following Perplexity & Linear design principles (clean typography, no cluttered icons, floating sidebar, token counters). |
 
----
 
 ### 4. Interpretation of "Leadership Updates" (Additional Feature)
 
@@ -45,7 +42,6 @@ We interpreted **"Leadership Updates"** as the need for founders and C-level exe
 3. **1-Click Executive Copy & Token Tracking**:
    - Fast 1-click formatted clipboard export with real-time input/output token tracking for leadership updates.
 
----
 
 ### 5. What We Would Do Differently with More Time
 
@@ -56,7 +52,6 @@ We interpreted **"Leadership Updates"** as the need for founders and C-level exe
 3. **Interactive Visual Charts**:
    - Add native interactive funnel charts (using Chart.js / Recharts) for visual pipeline stage conversion drop-off analysis.
 
----
 
 ### 6. Summary Checklist of Technical Assignment Requirements
 
