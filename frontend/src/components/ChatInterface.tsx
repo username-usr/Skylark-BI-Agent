@@ -27,6 +27,15 @@ interface ChatInterfaceProps {
   onSelectModel: (modelId: string) => void;
 }
 
+const THINKING_PHRASES = [
+  "Thinking...",
+  "Pondering operational and commercial data...",
+  "Analyzing Monday.com pipeline records...",
+  "Synthesizing executive insights...",
+  "Reconciling cross-board metrics and cash flow...",
+  "Structuring strategic recommendations..."
+];
+
 const EXAMPLE_CARDS = [
   {
     title: "Prepare Executive Leadership Update",
@@ -60,6 +69,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [thinkingIndex, setThinkingIndex] = useState(0);
   const [isHeroDropdownOpen, setIsHeroDropdownOpen] = useState(false);
   const [isBottomDropdownOpen, setIsBottomDropdownOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -92,6 +102,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       if (onClearExternalQuery) onClearExternalQuery();
     }
   }, [externalQuery]);
+
+  // Cycle thinking phrases every 2.5 seconds during loading
+  useEffect(() => {
+    if (!loading) {
+      setThinkingIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setThinkingIndex((prev) => (prev + 1) % THINKING_PHRASES.length);
+    }, 2400);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -397,9 +419,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0">
                     <Sparkles className="w-4 h-4 animate-pulse" />
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-3xl px-6 py-4 text-xs md:text-sm font-mono text-gray-600 flex items-center gap-3">
+                  <div className="bg-gray-50 border border-gray-200 rounded-3xl px-6 py-4 text-xs md:text-sm font-mono text-gray-700 flex items-center gap-3 shadow-2xs">
                     <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                    <span>Compiling executive briefing from Monday.com boards with {currentModelObj.name}...</span>
+                    <span className="font-medium animate-pulse">{THINKING_PHRASES[thinkingIndex]}</span>
                   </div>
                 </div>
               )}
