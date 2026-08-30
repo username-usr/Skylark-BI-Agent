@@ -258,7 +258,7 @@ INSTRUCTIONS:
                 "table": None
             }
 
-        # 2. Fetch live Monday boards
+        # 2. Fetch live Monday boards dynamically
         deals_board = await self.monday_service.get_deals_board()
         wo_board = await self.monday_service.get_work_orders_board()
 
@@ -272,35 +272,101 @@ INSTRUCTIONS:
 
         # 3. Intent Classification Prioritization
 
-        # A. Explanatory / Why / Data Hygiene Intent (NO TABLES)
-        is_data_hygiene = bool(
+        # A. Comprehensive Leadership Update Intent
+        is_leadership_update = bool(
+            re.search(r'\b(leadership|executive|board|founder\s*update|briefing|weekly\s*update|management\s*update|prepare\s*data|update\s*for\s*leadership)\b', query_lower)
+        )
+
+        # B. Explanatory / Why / Data Hygiene Intent (NO TABLES)
+        is_data_hygiene = not is_leadership_update and bool(
             re.search(r'\b(why|missing|null|blank|audit|hygiene|unrecorded|exclusion|excluded|reason|reasons|gap|gaps|explain)\b', query_lower) and
             re.search(r'\b(value|values|deal|deals|data|record|records|pipeline|181)\b', query_lower)
         )
 
-        # B. Cross-Board Risk Intent
-        is_cross_board = not is_data_hygiene and bool(
+        # C. Cross-Board Risk Intent
+        is_cross_board = not is_leadership_update and not is_data_hygiene and bool(
             re.search(r'\b(cross|risk|health|bottleneck)\b', query_lower) or
             (re.search(r'\b(customer|client|account)s?\b', query_lower) and 
              re.search(r'\b(receivable|receivables|unbilled|outstanding|deal|deals|pipeline)\b', query_lower))
         )
         
-        # C. Billing / AR Intent
-        is_billing = not is_data_hygiene and bool(
+        # D. Billing / AR Intent
+        is_billing = not is_leadership_update and not is_data_hygiene and bool(
             re.search(r'\b(billing|collection|collections|receivable|receivables|\bar\b|unbilled|invoice|invoices|revenue)\b', query_lower)
         )
         
-        # D. Pipeline Analysis Intent
-        is_pipeline = not is_data_hygiene and bool(
+        # E. Pipeline Analysis Intent
+        is_pipeline = not is_leadership_update and not is_data_hygiene and bool(
             re.search(r'\b(pipeline|deal|deals|sales|funnel|closure|probability|forecast|weighted|stage|stages)\b', query_lower)
         )
         
-        # E. Operations Execution Intent
-        is_operations = not is_data_hygiene and bool(
+        # F. Operations Execution Intent
+        is_operations = not is_leadership_update and not is_data_hygiene and bool(
             re.search(r'\b(operation|operations|execution|work\s*order|work\s*orders|delivery|delivery\s*status)\b', query_lower)
         )
 
-        if is_data_hygiene:
+        if is_leadership_update:
+            # Aggregate all 4 core business domains for leadership update
+            p_data = PipelineAnalytics.analyze_pipeline(deals_board)
+            o_data = OperationsAnalytics.analyze_operations(wo_board)
+            b_data = BillingAnalytics.analyze_billing_and_collections(wo_board)
+            cb_data = CrossBoardAnalytics.analyze_cross_board_health(deals_board, wo_board)
+
+            p_sum = p_data["summary"]
+            o_sum = o_data["summary"]
+            b_sum = b_data["summary"]
+            high_risk = cb_data["high_risk_customers_with_open_deals"]
+
+            deterministic_context = {
+                "report_type": "Executive Leadership Update",
+                "sales_pipeline": {
+                    "total_pipeline_value": p_sum["total_pipeline_value_formatted"],
+                    "weighted_pipeline_value": p_sum["weighted_pipeline_value_formatted"],
+                    "open_deals_count": p_sum["open_deals_count"],
+                    "top_stages": p_data["stage_breakdown"][:4],
+                    "top_sectors": p_data["sector_breakdown"][:4],
+                    "missing_deals_count": dq_deals["missing_deal_values"]
+                },
+                "operations": {
+                    "total_work_orders": o_sum["total_work_orders"],
+                    "completed_count": o_sum["completed_count"],
+                    "in_progress_count": o_sum["in_progress_count"],
+                    "not_started_count": o_sum["not_started_count"]
+                },
+                "financials_and_cash_flow": {
+                    "total_contract_value": b_sum["total_contract_value_formatted"],
+                    "total_billed": b_sum["total_billed_value_formatted"],
+                    "total_collected": b_sum["total_collected_formatted"],
+                    "amount_receivable_ar": b_sum["total_receivable_formatted"],
+                    "unbilled_completed_risk": b_sum["unbilled_completed_value_formatted"],
+                    "unbilled_completed_count": b_sum["unbilled_completed_count"]
+                },
+                "high_risk_accounts": high_risk[:5]
+            }
+
+            metrics = [
+                {"title": "Open Pipeline", "value": p_sum["total_pipeline_value_formatted"], "subtext": f"{p_sum['open_deals_count']} open deals", "type": "primary"},
+                {"title": "Weighted Pipeline", "value": p_sum["weighted_pipeline_value_formatted"], "subtext": "Risk-adjusted", "type": "neutral"},
+                {"title": "Amount Receivable", "value": b_sum["total_receivable_formatted"], "subtext": "Overdue cash flow", "type": "warning"},
+                {"title": "Unbilled Completed", "value": b_sum["unbilled_completed_value_formatted"], "subtext": f"{b_sum['unbilled_completed_count']} projects at risk", "type": "danger"}
+            ]
+
+            if b_sum["unbilled_completed_count"] > 0:
+                warnings.append({
+                    "type": "LEADERSHIP_ALERT",
+                    "message": f"Revenue Leakage Alert: {b_sum['unbilled_completed_count']} completed work orders worth {b_sum['unbilled_completed_value_formatted']} remain unbilled."
+                })
+
+            table = {
+                "title": "Leadership Summary: High-Risk Accounts (Open Pipeline vs Overdue AR)",
+                "headers": ["Customer Code", "Open Deals", "Open Pipeline", "Outstanding Receivables"],
+                "rows": [
+                    [acc["client_code"], acc["open_deals_count"], acc["open_pipeline_formatted"], acc["total_receivables_formatted"]]
+                    for acc in high_risk[:6]
+                ]
+            }
+
+        elif is_data_hygiene:
             missing_by_stage = Counter()
             total_by_stage = Counter()
             for item in deals_board.items:

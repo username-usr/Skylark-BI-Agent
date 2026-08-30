@@ -1,7 +1,6 @@
 # Skylark Drones — Monday.com Business Intelligence Agent
 ## Executive Decision Log & Technical Architecture Reference
 
----
 
 ### 1. Executive Summary & Problem Overview
 Founders and executive leaders at Skylark Drones require immediate, high-confidence visibility into sales pipelines, project delivery bottlenecks, cash collections, and cross-board risks without manually combing through unstructured Monday.com boards or waiting for ad-hoc spreadsheet cleanup.

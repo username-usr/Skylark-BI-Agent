@@ -29,6 +29,11 @@ interface ChatInterfaceProps {
 
 const EXAMPLE_CARDS = [
   {
+    title: "Prepare Executive Leadership Update",
+    subtitle: "Consolidated commercial, operations, cash flow & risk briefing",
+    query: "Prepare a comprehensive leadership update summarizing deals pipeline, operations execution, billing, and cross-board risks."
+  },
+  {
     title: "Analyze Deals pipeline for this quarter",
     subtitle: "Open value, weighted pipeline & sector breakdown",
     query: "How is our open pipeline looking across sectors, and what is our weighted pipeline value?"
@@ -40,13 +45,8 @@ const EXAMPLE_CARDS = [
   },
   {
     title: "Review unbilled completed projects",
-    subtitle: "Identify accrued revenue risks in Work Orders",
+    subtitle: "Identify accrued revenue leakage in Work Orders",
     query: "What is our total outstanding Receivables and Unbilled Completed Work?"
-  },
-  {
-    title: "Run deterministic data quality audit",
-    subtitle: "Detect missing deal values and status issues",
-    query: "Run a data quality audit across Deals and Work Orders."
   }
 ];
 
@@ -206,7 +206,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     }
                   }}
                   rows={3}
-                  placeholder="Ask Monday BI a business question or request an analysis..."
+                  placeholder="Ask Monday BI a business question or request a leadership update..."
                   className="w-full bg-transparent text-base md:text-[17px] leading-relaxed text-gray-900 placeholder:text-gray-400 outline-none resize-none"
                 />
               </div>
@@ -275,7 +275,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             {/* Example Prompt Cards */}
             <div className="w-full">
               <div className="text-xs md:text-[13px] font-semibold text-gray-500 mb-3.5 px-1 uppercase tracking-wider">
-                Get started with an example below
+                Executive Starters
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -286,10 +286,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     className="p-4 md:p-5 rounded-3xl bg-gray-50/70 hover:bg-gray-100/80 border border-gray-200/80 hover:border-gray-300 transition-all cursor-pointer flex flex-col justify-between min-h-[105px] group shadow-2xs"
                   >
                     <div>
-                      <h4 className="text-sm md:text-[15px] font-semibold text-gray-900 group-hover:text-purple-700 transition-colors leading-snug">
-                        {card.title}
-                      </h4>
-                      <p className="text-xs md:text-[13px] text-gray-500 mt-1.5 leading-relaxed">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <h4 className="text-sm md:text-[15px] font-semibold text-gray-900 group-hover:text-purple-700 transition-colors leading-snug">
+                          {card.title}
+                        </h4>
+                        {idx === 0 && <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Featured</span>}
+                      </div>
+                      <p className="text-xs md:text-[13px] text-gray-500 leading-relaxed">
                         {card.subtitle}
                       </p>
                     </div>
@@ -396,7 +399,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
                   <div className="bg-gray-50 border border-gray-200 rounded-3xl px-6 py-4 text-xs md:text-sm font-mono text-gray-600 flex items-center gap-3">
                     <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                    <span>Querying Monday.com boards & calculating metrics with {currentModelObj.name}...</span>
+                    <span>Compiling executive briefing from Monday.com boards with {currentModelObj.name}...</span>
                   </div>
                 </div>
               )}
@@ -405,7 +408,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           </div>
 
-          {/* Sticky Bottom Prompt Bar with Live Interactive Model Switcher */}
+          {/* Sticky Bottom Prompt Bar */}
           <div className="shrink-0 p-4 md:p-6 border-t border-gray-100 bg-white/95 backdrop-blur-md">
             <div className="max-w-2xl mx-auto">
               <div className="flex items-center bg-gray-50 rounded-full border border-gray-200/90 focus-within:border-gray-300 focus-within:bg-white shadow-sm transition-all px-4 py-2 mb-2.5 relative">
